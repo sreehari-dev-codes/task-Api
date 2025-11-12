@@ -9,26 +9,34 @@ import logger from "./utils/logger";
 const PORT = Number(process.env.PORT) || 3000;
 
 async function connectRedis() {
-  const redisHost = process.env.REDIS_HOST;
-  const redisPort = Number(process.env.REDIS_PORT);
-  const redisUsername = process.env.REDIS_USERNAME;
-  const redisPassword = process.env.REDIS_PASSWORD;
+  let redisClient;
 
-  if (!redisHost || isNaN(redisPort) || !redisPassword) {
-    throw new Error(
-      `Invalid Redis environment variables: 
-      REDIS_HOST=${redisHost}, REDIS_PORT=${process.env.REDIS_PORT}, REDIS_PASSWORD=${!!redisPassword}`
-    );
+  if (process.env.REDIS_URL) {
+    // Use full Redis URL if provided
+    redisClient = createClient({ url: process.env.REDIS_URL });
+  } else {
+    // Fallback to individual host/port/password
+    const redisHost = process.env.REDIS_HOST;
+    const redisPort = Number(process.env.REDIS_PORT);
+    const redisUsername = process.env.REDIS_USERNAME;
+    const redisPassword = process.env.REDIS_PASSWORD;
+
+    if (!redisHost || isNaN(redisPort) || !redisPassword) {
+      throw new Error(
+        `Invalid Redis environment variables: 
+REDIS_HOST=${redisHost}, REDIS_PORT=${process.env.REDIS_PORT}, REDIS_PASSWORD=${!!redisPassword}`
+      );
+    }
+
+    redisClient = createClient({
+      username: redisUsername,
+      password: redisPassword,
+      socket: {
+        host: redisHost,
+        port: redisPort,
+      },
+    });
   }
-
-  const redisClient = createClient({
-    username: redisUsername,
-    password: redisPassword,
-    socket: {
-      host: redisHost,
-      port: redisPort,
-    },
-  });
 
   redisClient.on("error", (err) => logger.error("Redis error: " + err));
   redisClient.on("connect", () => logger.info("Redis connected successfully"));
