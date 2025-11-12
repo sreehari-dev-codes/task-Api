@@ -6,19 +6,26 @@ import { connectDB } from "./config/db";
 import { createClient } from "redis";
 import logger from "./utils/logger";
 
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT) || 3000;
 
 async function connectRedis() {
-  const redisPort = Number(process.env.REDIS_PORT); // make sure this is a number
-  if (isNaN(redisPort)) {
-    throw new Error("Invalid REDIS_PORT environment variable: " + process.env.REDIS_PORT);
+  const redisHost = process.env.REDIS_HOST;
+  const redisPort = Number(process.env.REDIS_PORT);
+  const redisUsername = process.env.REDIS_USERNAME;
+  const redisPassword = process.env.REDIS_PASSWORD;
+
+  if (!redisHost || isNaN(redisPort) || !redisPassword) {
+    throw new Error(
+      `Invalid Redis environment variables: 
+      REDIS_HOST=${redisHost}, REDIS_PORT=${process.env.REDIS_PORT}, REDIS_PASSWORD=${!!redisPassword}`
+    );
   }
 
   const redisClient = createClient({
-    username: process.env.REDIS_USERNAME,
-    password: process.env.REDIS_PASSWORD,
+    username: redisUsername,
+    password: redisPassword,
     socket: {
-      host: process.env.REDIS_HOST,
+      host: redisHost,
       port: redisPort,
     },
   });
@@ -34,7 +41,7 @@ async function connectRedis() {
   try {
     await connectDB(process.env.MONGO_URI || "mongodb://localhost:27017/taskdb");
 
-    const redisClient = await connectRedis();
+    await connectRedis();
 
     app.listen(PORT, () => {
       logger.info(`Server listening on http://localhost:${PORT}`);
