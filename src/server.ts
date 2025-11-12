@@ -11,7 +11,7 @@ const PORT = Number(process.env.PORT || 3000);
 (async function start() {
   try {
     await connectDB(process.env.MONGO_URI || "mongodb://localhost:27017/taskdb");
-    await connectRedis(process.env.REDIS_URL);
+   await connectRedis(process.env.REDIS_URL);
     app.listen(PORT, () => {
       logger.info(`Server listening on http://localhost:${PORT}`);
     });
