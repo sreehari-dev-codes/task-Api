@@ -9,12 +9,17 @@ import logger from "./utils/logger";
 const PORT = Number(process.env.PORT || 3000);
 
 async function connectRedis() {
+  const redisPort = Number(process.env.REDIS_PORT); // make sure this is a number
+  if (isNaN(redisPort)) {
+    throw new Error("Invalid REDIS_PORT environment variable: " + process.env.REDIS_PORT);
+  }
+
   const redisClient = createClient({
     username: process.env.REDIS_USERNAME,
     password: process.env.REDIS_PASSWORD,
     socket: {
       host: process.env.REDIS_HOST,
-      port: Number(process.env.REDIS_PORT),
+      port: redisPort,
     },
   });
 
